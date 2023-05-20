@@ -27,10 +27,9 @@ app.post('/line/message_api/webhook', async (req, res) => {
   addUserChatHistory(lineUserId, 'human', text, timestamp);
   // 受信メッセージの処理パート終わり =================================================
 
-  // WIP:
   // 返信メッセージの処理パート ======================================================
   const accessToken = await getAccessToken();
-  await pushMessage(accessToken, lineUserId);
+  await pushMessage(accessToken, lineUserId, text);
   // 返信メッセージの処理パート終わり =================================================
 
   res.send(text);
@@ -47,6 +46,7 @@ const userChatHistories: {
     timestamp: EpochTimeStamp;
   }[];
 } = {};
+
 // NOTE: 実際には何かしらの形で永続化される必要があるが、今回は単純化のためにon memoryで管理する
 const addUserChatHistory = (
   lineUserId: string,
@@ -61,7 +61,11 @@ const addUserChatHistory = (
   }
 };
 
-const pushMessage = async (accessToken: AccessToken, lineUserId: string) => {
+const pushMessage = async (
+  accessToken: AccessToken,
+  lineUserId: string,
+  receivedText: string,
+) => {
   try {
     await axios.post(
       'https://api.line.me/v2/bot/message/push',
@@ -70,11 +74,7 @@ const pushMessage = async (accessToken: AccessToken, lineUserId: string) => {
         messages: [
           {
             type: 'text',
-            text: 'Hello, world1',
-          },
-          {
-            type: 'text',
-            text: 'Hello, world2',
+            text: `「${receivedText}」と言いましたね？`,
           },
         ],
       },
