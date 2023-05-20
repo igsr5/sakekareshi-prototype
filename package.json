@@ -9,6 +9,7 @@
   "author": "igsr5 <i@gsr5.com> (https://igsr5.dev/)",
   "license": "ISC",
   "devDependencies": {
+    "@types/axios": "^0.14.0",
     "@types/express": "^4.17.17",
     "@types/node": "^20.2.1",
     "eslint": "^8.41.0",
@@ -18,6 +19,7 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
+    "axios": "^1.4.0",
     "express": "^4.17.17"
   }
 }

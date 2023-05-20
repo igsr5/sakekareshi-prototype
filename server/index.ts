@@ -1,3 +1,4 @@
+import axios from 'axios';
 import express from 'express';
 
 const app = express();
@@ -26,7 +27,7 @@ const addUserChatHistory = (
 
 app.use(express.json());
 
-app.post('/line/message_api/webhook', (req, res) => {
+app.post('/line/message_api/webhook', async (req, res) => {
   // 前処理パート ================================================================
   const body = req.body;
   // NOTE: 実際には event はmesasgeごとに複数届くので本番サービスでは何かしら考慮する必要があるが、今回は単純化のため最初のメッセージのみ考える
@@ -49,10 +50,41 @@ app.post('/line/message_api/webhook', (req, res) => {
 
   // WIP:
   // 返信メッセージの処理パート ======================================================
+  await pushMessage(lineUserId);
   // 返信メッセージの処理パート終わり =================================================
+
   res.send(text);
 });
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });
+
+const pushMessage = async (lineUserId: string) => {
+  try {
+    await axios.post(
+      'https://api.line.me/v2/bot/message/push',
+      {
+        to: lineUserId,
+        messages: [
+          {
+            type: 'text',
+            text: 'Hello, world1',
+          },
+          {
+            type: 'text',
+            text: 'Hello, world2',
+          },
+        ],
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer {channel_access_token}',
+        },
+      },
+    );
+  } catch (error) {
+    console.error(`Error in pushMessage: ${error}`);
+  }
+};
