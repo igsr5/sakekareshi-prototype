@@ -50,7 +50,8 @@ app.post('/line/message_api/webhook', async (req, res) => {
 
   // WIP:
   // 返信メッセージの処理パート ======================================================
-  await pushMessage(lineUserId);
+  const accessToken = await getAccessToken();
+  await pushMessage(accessToken, lineUserId);
   // 返信メッセージの処理パート終わり =================================================
 
   res.send(text);
@@ -60,7 +61,7 @@ app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });
 
-const pushMessage = async (lineUserId: string) => {
+const pushMessage = async (accessToken: AccessToken, lineUserId: string) => {
   try {
     await axios.post(
       'https://api.line.me/v2/bot/message/push',
@@ -80,11 +81,40 @@ const pushMessage = async (lineUserId: string) => {
       {
         headers: {
           'Content-Type': 'application/json',
-          Authorization: 'Bearer {channel_access_token}',
+          Authorization: `Bearer ${accessToken.access_token}`,
         },
       },
     );
   } catch (error) {
     console.error(`Error in pushMessage: ${error}`);
+  }
+};
+
+type AccessToken = {
+  access_token: string;
+  expires_in: number;
+  token_type: string;
+};
+const getAccessToken = async (): Promise<AccessToken> => {
+  try {
+    const params = new URLSearchParams();
+    params.append('grant_type', 'client_credentials');
+    params.append('client_id', process.env.LINE_CHANNEL_ID || '');
+    params.append('client_secret', process.env.LINE_CHANNEL_SECRET || '');
+
+    const config = {
+      method: 'post',
+      url: 'https://api.line.me/v2/oauth/accessToken',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      data: params,
+    };
+
+    const response = await axios(config);
+    return response.data as AccessToken;
+  } catch (error) {
+    console.error(`Error in getAccessToken: ${error}`);
+    return { access_token: '', expires_in: 0, token_type: '' };
   }
 };

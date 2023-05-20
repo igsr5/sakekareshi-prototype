@@ -1,3 +1,5 @@
+.envrc
+
 lib-cov
 *.seed
 *.log
