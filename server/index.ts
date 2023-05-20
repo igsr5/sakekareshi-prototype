@@ -4,27 +4,6 @@ import express from 'express';
 const app = express();
 const port = 3000;
 
-const userChatHistories: {
-  [lineUserId: string]: {
-    userType: 'human' | 'bot'; // human → 受信、bot → 返信
-    message: string;
-    timestamp: EpochTimeStamp;
-  }[];
-} = {};
-// NOTE: 実際には何かしらの形で永続化される必要があるが、今回は単純化のためにon memoryで管理する
-const addUserChatHistory = (
-  lineUserId: string,
-  userType: 'human' | 'bot',
-  message: string,
-  timestamp: EpochTimeStamp,
-) => {
-  if (!userChatHistories[lineUserId]) {
-    userChatHistories[lineUserId] = [{ userType, message, timestamp }];
-  } else {
-    userChatHistories[lineUserId].push({ userType, message, timestamp });
-  }
-};
-
 app.use(express.json());
 
 app.post('/line/message_api/webhook', async (req, res) => {
@@ -60,6 +39,27 @@ app.post('/line/message_api/webhook', async (req, res) => {
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });
+
+const userChatHistories: {
+  [lineUserId: string]: {
+    userType: 'human' | 'bot'; // human → 受信、bot → 返信
+    message: string;
+    timestamp: EpochTimeStamp;
+  }[];
+} = {};
+// NOTE: 実際には何かしらの形で永続化される必要があるが、今回は単純化のためにon memoryで管理する
+const addUserChatHistory = (
+  lineUserId: string,
+  userType: 'human' | 'bot',
+  message: string,
+  timestamp: EpochTimeStamp,
+) => {
+  if (!userChatHistories[lineUserId]) {
+    userChatHistories[lineUserId] = [{ userType, message, timestamp }];
+  } else {
+    userChatHistories[lineUserId].push({ userType, message, timestamp });
+  }
+};
 
 const pushMessage = async (accessToken: AccessToken, lineUserId: string) => {
   try {
