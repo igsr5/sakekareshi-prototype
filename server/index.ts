@@ -5,7 +5,7 @@ const port = 3000;
 
 const userChatHistories: {
   [lineUserId: string]: {
-    userType: 'human' | 'bot';
+    userType: 'human' | 'bot'; // human → 受信、bot → 返信
     message: string;
     timestamp: EpochTimeStamp;
   }[];
