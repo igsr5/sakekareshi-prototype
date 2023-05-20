@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon"
   },
   "author": "igsr5 <i@gsr5.com> (https://igsr5.dev/)",
   "license": "ISC",
@@ -12,6 +12,7 @@
     "@types/express": "^4.17.17",
     "@types/node": "^20.2.1",
     "eslint": "^8.41.0",
+    "nodemon": "^2.0.22",
     "prettier": "^2.8.8",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4"
