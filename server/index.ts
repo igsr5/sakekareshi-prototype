@@ -3,7 +3,7 @@ import express from 'express';
 const app = express();
 const port = 3000;
 
-app.get('/ping', (req, res) => {
+app.post('/line/message_api/webhook', (req, res) => {
   res.send('Ping!');
 });
 
