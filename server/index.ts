@@ -27,6 +27,7 @@ const addUserChatHistory = (
 app.use(express.json());
 
 app.post('/line/message_api/webhook', (req, res) => {
+  // 前処理パート ================================================================
   const body = req.body;
   // NOTE: 実際には event はmesasgeごとに複数届くので本番サービスでは何かしら考慮する必要があるが、今回は単純化のため最初のメッセージのみ考える
   const event = body.events[0];
@@ -36,13 +37,19 @@ app.post('/line/message_api/webhook', (req, res) => {
     // no-op
     return;
   }
+  // 前処理パート終わり ============================================================
 
+  // 受信メッセージの処理パート ======================================================
   const lineUserId = event.source.userId;
   const text = event.message.text;
   const timestamp = event.timestamp;
 
   addUserChatHistory(lineUserId, 'human', text, timestamp);
+  // 受信メッセージの処理パート終わり =================================================
 
+  // WIP:
+  // 返信メッセージの処理パート ======================================================
+  // 返信メッセージの処理パート終わり =================================================
   res.send(text);
 });
 
