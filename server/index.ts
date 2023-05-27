@@ -29,7 +29,10 @@ app.post('/line/message_api/webhook', async (req, res) => {
 
   // 返信メッセージの処理パート ======================================================
   const accessToken = await getAccessToken();
-  await pushMessage(accessToken, lineUserId, text);
+  const sendText = `「${text}」と言いましたね？`;
+  await pushMessage(accessToken, lineUserId, sendText);
+
+  addUserChatHistory(lineUserId, 'bot', sendText, timestamp);
   // 返信メッセージの処理パート終わり =================================================
 
   res.send(text);
@@ -64,7 +67,7 @@ const addUserChatHistory = (
 const pushMessage = async (
   accessToken: AccessToken,
   lineUserId: string,
-  receivedText: string,
+  sendText: string,
 ) => {
   try {
     await axios.post(
@@ -74,7 +77,7 @@ const pushMessage = async (
         messages: [
           {
             type: 'text',
-            text: `「${receivedText}」と言いましたね？`,
+            text: sendText,
           },
         ],
       },
