@@ -1,10 +1,17 @@
 import axios from 'axios';
 import express from 'express';
+import { Configuration, OpenAIApi } from 'openai';
 
 const app = express();
 const port = 3000;
 
 app.use(express.json());
+
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+  organization: process.env.OPENAI_ORG_ID,
+});
+const openai = new OpenAIApi(configuration);
 
 app.post('/line/message_api/webhook', async (req, res) => {
   // 前処理パート ================================================================
@@ -28,15 +35,32 @@ app.post('/line/message_api/webhook', async (req, res) => {
   // 受信メッセージの処理パート終わり =================================================
 
   // 返信メッセージの生成処理パート ======================================================
-  // WIP
+  const gptMessages = convertChatHistoryToGptFormat(
+    userChatHistories[lineUserId],
+  );
+  // FIXME: たまにタイムアウトすることがある
+  const completion = await openai.createChatCompletion({
+    model: 'gpt-3.5-turbo',
+    temperature: 1,
+    messages: [
+      {
+        role: 'system',
+        content:
+          'あなたは日本人です。陽気なおじさんです。私の友達として会話してください。ただし、語尾は常に「~だっちゃ！」とつけること。',
+      },
+      ...gptMessages,
+    ],
+  });
+  const sendText = completion.data.choices[0].message?.content;
   // 返信メッセージの生成処理パート ======================================================
 
   // 返信メッセージの送信処理パート ======================================================
-  const accessToken = await getAccessToken();
-  const sendText = `「${text}」と言いましたね？`;
-  await pushMessage(accessToken, lineUserId, sendText);
+  if (!!sendText) {
+    const accessToken = await getAccessToken();
+    await pushMessage(accessToken, lineUserId, sendText);
 
-  addUserChatHistory(lineUserId, 'bot', sendText, timestamp);
+    addUserChatHistory(lineUserId, 'bot', sendText, timestamp);
+  }
   // 返信メッセージの送信処理パート終わり =================================================
 
   res.send(text);
@@ -46,12 +70,14 @@ app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });
 
+type ChatHistoryEntry = {
+  userType: 'human' | 'bot';
+  message: string;
+  timestamp: number;
+};
+
 const userChatHistories: {
-  [lineUserId: string]: {
-    userType: 'human' | 'bot'; // human → 受信、bot → 返信
-    message: string;
-    timestamp: EpochTimeStamp;
-  }[];
+  [lineUserId: string]: ChatHistoryEntry[];
 } = {};
 
 // NOTE: 実際には何かしらの形で永続化される必要があるが、今回は単純化のためにon memoryで管理する
@@ -66,6 +92,28 @@ const addUserChatHistory = (
   } else {
     userChatHistories[lineUserId].push({ userType, message, timestamp });
   }
+};
+
+type GptMessage = {
+  role: 'user' | 'assistant';
+  content: string;
+};
+
+const convertChatHistoryToGptFormat = (
+  chatHistory: ChatHistoryEntry[],
+): GptMessage[] => {
+  // timestampでソート
+  chatHistory.sort((a, b) => a.timestamp - b.timestamp);
+
+  const gptChatHistory = chatHistory.map((chatEntry): GptMessage => {
+    const role = chatEntry.userType === 'human' ? 'user' : 'assistant';
+    return {
+      role,
+      content: chatEntry.message,
+    };
+  });
+
+  return gptChatHistory;
 };
 
 const pushMessage = async (

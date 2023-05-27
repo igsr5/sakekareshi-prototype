@@ -1,2 +1,4 @@
+export OPENAI_ORG_ID=""
+export OPENAI_API_KEY=""
 export LINE_CHANNEL_ID="";
 export LINE_CHANNEL_SECRET="";

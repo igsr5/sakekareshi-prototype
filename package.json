@@ -20,6 +20,8 @@
   },
   "dependencies": {
     "axios": "^1.4.0",
-    "express": "^4.17.17"
+    "cd": "^0.3.3",
+    "express": "^4.17.17",
+    "openai": "^3.2.1"
   }
 }
